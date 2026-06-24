@@ -1,0 +1,32 @@
+MÔ TẢ QUÁ TRÌNH XỬ LÝ DỮ LIỆU (DATA PROCESSING PIPELINE)
+Dự án: Brain Tumor Detection (Phân loại U não qua ảnh MRI)
+
+Quá trình xử lý dữ liệu trong hệ thống diễn ra theo các bước sau đây khi người dùng tải một bức ảnh lên ứng dụng:
+
+1. Đọc và tải ảnh (Image Loading):
+   - Người dùng tải lên một tệp tin ảnh (hỗ trợ các định dạng .jpg, .jpeg, .png, .bmp, .webp, .tiff).
+   - Hệ thống sử dụng thư viện `Pillow` (PIL) để mở ảnh và tự động chuyển đổi không gian màu sang chuẩn `RGB` (Red, Green, Blue). Điều này đảm bảo tính đồng nhất, vì ảnh MRI đôi khi có thể ở dạng grayscale (ảnh xám) hoặc ảnh màu RGBA (có kênh trong suốt).
+
+2. Thay đổi kích thước ảnh (Resizing):
+   - Ảnh gốc có thể ở bất kỳ kích thước nào. Mô hình CNN (Convolutional Neural Network) được huấn luyện mặc định với đầu vào là 224x224 pixel.
+   - Hàm `resize((224, 224))` của Pillow được gọi để nén hoặc phóng to ảnh về đúng tỷ lệ chuẩn `224x224`.
+
+3. Chuyển đổi sang mảng đa chiều (Numpy Array Conversion):
+   - Bức ảnh kích thước 224x224 được chuyển thành một mảng (array) số thực của thư viện `numpy` với kiểu dữ liệu là `float32`.
+   - Lúc này dữ liệu ảnh trở thành một ma trận có kích thước `(224, 224, 3)`, trong đó `3` tương ứng với 3 kênh màu RGB. Mỗi giá trị pixel ban đầu nằm trong khoảng [0, 255]. Lớp Rescaling trong mô hình sẽ tự động chia cho 255 để chuẩn hóa.
+
+4. Mở rộng chiều dữ liệu (Batch Dimension Expansion):
+   - TensorFlow/Keras luôn yêu cầu đầu vào theo dạng "batch" (lô dữ liệu), tức là `(batch_size, height, width, channels)`.
+   - Vì ta chỉ dự đoán 1 bức ảnh duy nhất, hệ thống dùng hàm `np.expand_dims(arr, 0)` để chèn thêm một chiều vào trước mảng. Mảng trở thành `(1, 224, 224, 3)`.
+
+5. Đưa qua mô hình suy luận (Inference):
+   - Dữ liệu `(1, 224, 224, 3)` được đưa vào mô hình đã huấn luyện thông qua hàm `model.predict()`.
+   - Mô hình mạng neural chập (CNN) sẽ trích xuất các đặc trưng qua nhiều lớp Convolution và MaxPooling, sau đó đi qua lớp phân loại (Dense) với hàm kích hoạt Softmax ở cuối.
+
+6. Xử lý đầu ra (Post-processing):
+   - Kết quả trả về của hàm predict là một mảng xác suất chứa 4 giá trị (ví dụ: `[0.1, 0.8, 0.05, 0.05]`) tương ứng với 4 nhãn: Glioma, Meningioma, No Tumor, Pituitary. Tổng 4 giá trị luôn bằng 1.0 (do hàm Softmax).
+   - Hệ thống dùng `np.argmax()` để tìm vị trí có xác suất cao nhất (ở ví dụ trên là vị trí số 1 -> Meningioma).
+   - Giá trị xác suất cao nhất được nhân với 100 để hiển thị thành phần trăm (%) độ tin cậy (Confidence Score). Các độ tin cậy khác cũng được bóc tách để vẽ biểu đồ và phân tích (2nd Best, Margin).
+
+---
+*Ghi chú: Quá trình này được chạy trên một luồng riêng biệt (Thread) để không làm đơ giao diện đồ họa (GUI) của người dùng.*
