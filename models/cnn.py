@@ -1,31 +1,66 @@
 import torch
 import torch.nn as nn
-from torchvision.models import resnet18, resnet50, ResNet18_Weights, ResNet50_Weights
 
 class BaselineCNN(nn.Module):
-    def __init__(self, name: str = 'resnet50', num_classes: int = 4, pretrained: bool = True):
+    """Custom CNN built completely from scratch using PyTorch."""
+    def __init__(self, name: str = 'custom_cnn', num_classes: int = 4, pretrained: bool = False):
         super(BaselineCNN, self).__init__()
         
+        # 'pretrained' is ignored as this is from scratch
         self.name = name.lower()
-        if self.name == 'resnet50':
-            weights = ResNet50_Weights.DEFAULT if pretrained else None
-            self.model = resnet50(weights=weights)
-        elif self.name == 'resnet18':
-            weights = ResNet18_Weights.DEFAULT if pretrained else None
-            self.model = resnet18(weights=weights)
-        else:
-            raise ValueError(f"Unsupported model name: {name}")
-
-        # Replace the final fully connected layer
-        num_ftrs = self.model.fc.in_features
-        self.model.fc = nn.Linear(num_ftrs, num_classes)
+        
+        self.features = nn.Sequential(
+            # Block 1
+            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+            
+            # Block 2
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+            
+            # Block 3
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+            
+            # Block 4
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+            
+            # Block 5
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2, 2),
+        )
+        
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
+            nn.Linear(256, num_classes)
+        )
 
     def forward(self, x):
-        return self.model(x)
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = self.classifier(x)
+        return x
 
 if __name__ == '__main__':
     # Test model
-    model = BaselineCNN(name='resnet50', num_classes=4, pretrained=False)
+    model = BaselineCNN(num_classes=4)
     x = torch.randn(2, 3, 224, 224)
     out = model(x)
     print(f"Output shape: {out.shape}")
+

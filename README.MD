@@ -1,62 +1,163 @@
 # Brain Tumor Detection
 
-## Mô tả
+Phân loại khối u não từ ảnh MRI sử dụng Custom CNN xây dựng hoàn toàn từ đầu bằng PyTorch (không pretrained, không transfer learning).
 
-Dự án dùng TensorFlow để huấn luyện và kiểm thử mô hình phân loại u não từ ảnh MRI. Dữ liệu được lưu trong `data/Dataset` với hai thư mục con `Training` và `Testing`.
+---
+
+## Yêu cầu nghiên cứu
+
+- **Custom CNN** — xây dựng từ đầu bằng PyTorch (`nn.Conv2d`, `nn.BatchNorm2d`, …)
+- **Không sử dụng** pretrained models / transfer learning
+- **Dataset 1** (4-class supervised): Glioma · Meningioma · No Tumor · Pituitary
+- **Dataset 2** (Br35H) — sử dụng ở Phase 3 (Semi-Supervised Learning)
+- **Grad-CAM** — sẽ được triển khai ở Phase 3
+
+---
 
 ## Cài đặt
 
 ```powershell
 cd c:\Users\84387\Documents\webcuatra\SIC\BrainTumorDetection
-
-# Cài dependencies
 python -m pip install -r requirements.txt
 ```
 
-## Chạy Desktop App (PyQt5 GUI)
+> Nếu cần cài thêm PyQt5:
+> ```powershell
+> pip install PyQt5
+> ```
+
+---
+
+## Cấu trúc dữ liệu
+
+```
+data/
+├── dataset1/
+│   ├── Training/
+│   │   ├── glioma/
+│   │   ├── meningioma/
+│   │   ├── notumor/
+│   │   └── pituitary/
+│   └── Testing/
+│       └── (same structure)
+└── dataset2/     # Br35H — dùng cho SSL (Phase 3)
+```
+
+---
+
+## Chế độ Development & Research
+
+Chế độ được điều khiển hoàn toàn qua file `experiments/baseline.yaml` — **không sửa code**.
+
+### Development Mode (debug nhanh)
+
+```yaml
+development:
+  enabled: true       # BẬT Development Mode
+  subset_ratio: 0.2   # Dùng 20% dữ liệu mỗi class (280/1400 ảnh)
+  image_size: 128     # Ảnh nhỏ hơn để tăng tốc
+  batch_size: 8
+  epochs: 5
+```
+
+Kết quả: `280 × 4 = 1120` ảnh train, validation/test **giữ nguyên 100%**.
+
+### Research Mode (thí nghiệm chính thức)
+
+```yaml
+development:
+  enabled: false      # TẮT Development Mode → tự động dùng Research
+
+research:
+  enabled: false
+  subset_ratio: 1.0   # 100% Dataset 1 (1400 ảnh/class)
+  image_size: 224
+  batch_size: 32
+  epochs: 30
+```
+
+> **Luận văn PHẢI dùng Research Mode** với toàn bộ dữ liệu và kiến trúc CNN không thay đổi.
+
+---
+
+## Training Workflow
+
+```powershell
+# Development Mode (nhanh, debug)
+python main.py --config experiments/baseline.yaml
+
+# Research Mode: sửa baseline.yaml: development.enabled = false
+python main.py --config experiments/baseline.yaml
+```
+
+**Tính năng huấn luyện:**
+- Automatic Mixed Precision (AMP) khi có CUDA
+- tqdm progress bar với ETA mỗi batch
+- Hiển thị thời gian huấn luyện mỗi epoch
+- Cosine Annealing LR Scheduler
+- Early Stopping (patience = 7 epochs mặc định)
+- Chỉ lưu `saved_model/best_model.pth`
+- Stratified sampling trong Development Mode
+
+---
+
+## Testing Workflow
+
+```powershell
+pytest
+```
+
+---
+
+## GUI — Inference Desktop App
 
 ```powershell
 python gui_app.py
 ```
 
-Đây là ứng dụng Desktop GUI chuyên nghiệp hỗ trợ:
-- Kéo thả (Drag & drop) ảnh MRI.
-- Xem kết quả phân tích khối u (Glioma, Meningioma, Pituitary, No Tumor) trực quan.
-- Chạy nền (Threaded Inference) không bị đơ giật ứng dụng.
+**Chức năng:**
+1. Load model `.pth` đã huấn luyện
+2. Chọn ảnh MRI
+3. Hiển thị ảnh MRI gốc
+4. Dự đoán 1 trong 4 classes
+5. Hiển thị confidence của từng class (thanh tiến trình màu)
+6. Hiển thị thời gian inference (ms)
+7. Export kết quả ra PNG
+8. Grad-CAM overlay *(Phase 3)*
 
-## Chạy huấn luyện
+> GUI **không chứa business logic** — toàn bộ logic inference nằm ở `inference/predictor.py`.
 
-```powershell
-python train.py --dataset-dir data/Dataset
-```
-
-## Chạy test
-
-```powershell
-pytest src/test/test_model.py
-```
+---
 
 ## Cấu trúc dự án
 
 ```
 BrainTumorDetection/
-├── gui_app.py                      # 🖥️ PyQt5 Desktop App (GUI)
-├── train.py                        # Entry point huấn luyện
-├── requirements.txt
+├── main.py                     # Entry point huấn luyện
+├── gui_app.py                  # Entry point GUI
+├── experiments/
+│   └── baseline.yaml           # Điều chỉnh mode ở đây
+├── configs/
+│   └── config.py               # Dataclasses cấu hình
+├── models/
+│   └── cnn.py                  # Custom CNN (from scratch)
+├── datasets/
+│   ├── brain_mri_dataset.py
+│   ├── data_module.py          # Stratified Sampling + DataLoaders
+│   └── transforms.py
+├── training/
+│   ├── trainer.py              # AMP, tqdm, time tracking
+│   └── metrics.py
+├── inference/
+│   ├── predictor.py            # Inference engine
+│   └── preprocessing.py       # Image loading + transform
+├── gui/
+│   ├── main_window.py          # PyQt5 UI layout
+│   ├── controller.py           # Bridge UI <-> inference
+│   └── widgets.py              # Reusable UI components
 ├── data/
-│   └── Dataset/
-│       ├── Training/               # glioma, meningioma, notumor, pituitary
-│       └── Testing/
-├── saved_model/
-│   └── brain_tumor_detector/
-│       └── best_model.h5           # ~155 MB
-└── src/
-    ├── model/brain_tumor_model.py  # CNN architecture
-    ├── training/train.py           # Training pipeline
-    ├── utils/
-    │   ├── data_loader.py
-    │   └── preprocessing.py
-    └── test/
-        ├── test_model.py
-        └── test_preprocessing.py
+│   ├── dataset1/               # Training + Testing
+│   └── dataset2/               # Br35H (SSL Phase 3)
+└── saved_model/
+    └── best_model.pth
 ```
