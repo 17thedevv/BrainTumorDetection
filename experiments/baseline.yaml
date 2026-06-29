@@ -1,0 +1,22 @@
+experiment_name: "baseline_supervised"
+project_name: "brain_tumor_detection"
+seed: 42
+
+data:
+  dataset1_train_path: "data/dataset1/Training"
+  dataset1_test_path: "data/dataset1/Testing"
+  dataset2_path: "data/dataset2"  # Will be used later in SSL phase
+  image_size: 224
+  batch_size: 32
+  num_workers: 4
+
+model:
+  name: "resnet50"
+  num_classes: 4
+  pretrained: true
+
+training:
+  epochs: 20
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  ssl_enabled: false

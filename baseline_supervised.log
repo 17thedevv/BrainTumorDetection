@@ -1,0 +1,29 @@
+2026-06-29 14:01:28,133 - brain_tumor_detection - INFO - Loaded configuration from experiments/baseline.yaml
+2026-06-29 14:01:28,141 - brain_tumor_detection - INFO - Random seed set to 42
+2026-06-29 14:01:45,361 - brain_tumor_detection - INFO - Initialized Dataset 1 (Supervised) - Train batches: 175, Val batches: 50
+2026-06-29 14:01:45,362 - brain_tumor_detection - INFO - Using device: cpu
+2026-06-29 14:01:48,907 - brain_tumor_detection - INFO - Starting Phase 2: Supervised Baseline Training
+2026-06-29 14:01:48,907 - brain_tumor_detection - INFO - --- Epoch 1/20 ---
+2026-06-29 14:02:27,199 - brain_tumor_detection - INFO - Train Batch 0/175 Loss: 1.4141
+2026-06-29 14:03:22,391 - brain_tumor_detection - INFO - Train Batch 10/175 Loss: 1.1324
+2026-06-29 14:04:34,215 - brain_tumor_detection - INFO - Train Batch 20/175 Loss: 0.8693
+2026-06-29 14:05:33,320 - brain_tumor_detection - INFO - Train Batch 30/175 Loss: 0.3933
+2026-06-29 14:06:29,064 - brain_tumor_detection - INFO - Train Batch 40/175 Loss: 0.6035
+2026-06-29 14:07:23,571 - brain_tumor_detection - INFO - Train Batch 50/175 Loss: 0.2403
+2026-06-29 14:08:55,105 - brain_tumor_detection - INFO - Train Batch 60/175 Loss: 0.2987
+2026-06-29 14:09:47,743 - brain_tumor_detection - INFO - Train Batch 70/175 Loss: 0.2681
+2026-06-29 14:10:35,741 - brain_tumor_detection - INFO - Train Batch 80/175 Loss: 0.1850
+2026-06-29 14:12:07,522 - brain_tumor_detection - INFO - Train Batch 90/175 Loss: 0.2841
+2026-06-29 14:13:08,471 - brain_tumor_detection - INFO - Train Batch 100/175 Loss: 0.2009
+2026-06-29 14:15:36,098 - brain_tumor_detection - INFO - Train Batch 110/175 Loss: 0.1473
+2026-06-29 14:16:49,805 - brain_tumor_detection - INFO - Train Batch 120/175 Loss: 0.1134
+2026-06-29 14:17:55,630 - brain_tumor_detection - INFO - Train Batch 130/175 Loss: 0.2599
+2026-06-29 14:18:39,974 - brain_tumor_detection - INFO - Loaded configuration from experiments/baseline.yaml
+2026-06-29 14:18:40,014 - brain_tumor_detection - INFO - Random seed set to 42
+2026-06-29 14:18:40,496 - brain_tumor_detection - INFO - Initialized Dataset 1 (Supervised) - Train batches: 175, Val batches: 50
+2026-06-29 14:18:40,497 - brain_tumor_detection - INFO - Using device: cpu
+2026-06-29 14:18:41,217 - brain_tumor_detection - INFO - Starting Phase 2: Supervised Baseline Training
+2026-06-29 14:18:41,221 - brain_tumor_detection - INFO - --- Epoch 1/20 ---
+2026-06-29 14:18:44,097 - brain_tumor_detection - INFO - Train Batch 140/175 Loss: 0.2495
+2026-06-29 14:22:57,040 - brain_tumor_detection - INFO - Train Batch 0/175 Loss: 1.4141
+2026-06-29 14:30:12,720 - brain_tumor_detection - INFO - Train Batch 150/175 Loss: 0.1927
