@@ -60,8 +60,8 @@ def analyze_dataset(base_path, dataset_name):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ds1', default='data/dataset1')
-    parser.add_argument('--ds2', default='data/dataset2')
+    parser.add_argument('--ds1', default='/kaggle/input/datasets/n17thedev/dataset1')
+    parser.add_argument('--ds2', default='/kaggle/input/datasets/n17thedev/dataset2')
     args = parser.parse_args()
     
     np.random.seed(42)
