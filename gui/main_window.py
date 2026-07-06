@@ -187,14 +187,15 @@ class MainWindow(QMainWindow):
             self.conf_bars[cls] = bar
         layout.addWidget(conf_frame)
 
-        # Grad-CAM placeholder (Phase 3)
-        gradcam_frame = SectionFrame("Grad-CAM (Phase 3)")
-        self.gradcam_label = QLabel("Grad-CAM will be available in Phase 3")
+        # Grad-CAM Tumor Localization
+        gradcam_frame = SectionFrame("Grad-CAM Tumor Localization")
+        self.gradcam_label = QLabel("Run prediction to see tumor localization")
         self.gradcam_label.setAlignment(Qt.AlignCenter)
-        self.gradcam_label.setMinimumHeight(140)
+        self.gradcam_label.setMinimumHeight(240)
         self.gradcam_label.setStyleSheet(
             "border: 2px dashed #34495e; border-radius: 8px; color: #7f8c8d; font-size: 12px;"
         )
+        self.gradcam_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         gradcam_frame.add_widget(self.gradcam_label)
         layout.addWidget(gradcam_frame)
 
@@ -236,6 +237,11 @@ class MainWindow(QMainWindow):
         self.result_widget.reset()
         for bar in self.conf_bars.values():
             bar.set_value(0.0)
+        self.gradcam_label.clear()
+        self.gradcam_label.setText("Run prediction to see tumor localization")
+        self.gradcam_label.setStyleSheet(
+            "border: 2px dashed #34495e; border-radius: 8px; color: #7f8c8d; font-size: 12px;"
+        )
         self.export_btn.setEnabled(False)
         self._last_result = None
         self._refresh_predict_btn()
@@ -256,6 +262,10 @@ class MainWindow(QMainWindow):
                 if cls_name in self.conf_bars:
                     self.conf_bars[cls_name].set_value(prob)
 
+        # Display Grad-CAM heatmap
+        if 'gradcam_heatmap' in result and result['gradcam_heatmap'] is not None:
+            self._display_gradcam(result['gradcam_heatmap'])
+
         self.predict_btn.setEnabled(True)
         self.export_btn.setEnabled('error' not in result)
 
@@ -265,19 +275,24 @@ class MainWindow(QMainWindow):
             )
         else:
             self.statusBar().showMessage(f"Error: {result['error']}")
+            self.gradcam_label.setText("Error generating Grad-CAM")
 
     def _on_export(self):
         if not self._last_result or 'error' in self._last_result:
             return
         save_path, _ = QFileDialog.getSaveFileName(
-            self, "Export Result", "prediction_result.png", "PNG Image (*.png)"
+            self, "Export Grad-CAM Result", "gradcam_result.png", "PNG Image (*.png)"
         )
         if not save_path:
             return
-        pixmap = self.image_label.pixmap()
-        if pixmap:
-            pixmap.save(save_path, "PNG")
-            self.statusBar().showMessage(f"Exported to {save_path}")
+        
+        # Export the full-resolution Grad-CAM image directly from PIL
+        if 'gradcam_heatmap' in self._last_result and self._last_result['gradcam_heatmap'] is not None:
+            try:
+                self._last_result['gradcam_heatmap'].save(save_path, "PNG")
+                self.statusBar().showMessage(f"Exported Grad-CAM to {save_path}")
+            except Exception as e:
+                self.statusBar().showMessage(f"Export failed: {e}")
 
     # ------------------------------------------------------------------
     # Helpers
@@ -296,6 +311,23 @@ class MainWindow(QMainWindow):
         )
         self.image_label.setPixmap(scaled)
 
+    def _display_gradcam(self, pil_img):
+        from PyQt5.QtGui import QImage
+        im = pil_img.convert("RGBA")
+        data = im.tobytes("raw", "RGBA")
+        qim = QImage(data, im.size[0], im.size[1], QImage.Format_RGBA8888)
+        pixmap = QPixmap.fromImage(qim)
+        
+        scaled = pixmap.scaled(
+            self.gradcam_label.width() or 400,
+            self.gradcam_label.height() or 240,
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+        self.gradcam_label.setPixmap(scaled)
+        self.gradcam_label.setStyleSheet("border: 1px solid #34495e; border-radius: 8px;")
+
     def _refresh_predict_btn(self):
         ready = self.controller.is_model_loaded() and bool(self.controller.get_image_path())
         self.predict_btn.setEnabled(ready)
+

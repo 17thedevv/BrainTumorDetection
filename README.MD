@@ -14,17 +14,33 @@ Phân loại khối u não từ ảnh MRI sử dụng Custom CNN xây dựng ho�
 
 ---
 
-## Cài đặt
+## Cài đặt & Hướng dẫn Chạy dự án
 
+**Bước 1: Clone repo và khởi tạo môi trường ảo (Khuyến nghị)**
 ```powershell
-cd c:\Users\84387\Documents\webcuatra\SIC\BrainTumorDetection
-python -m pip install -r requirements.txt
+git clone https://github.com/17thedevv/BrainTumorDetection.git
+cd BrainTumorDetection
+python -m venv venv
+.\venv\Scripts\activate
 ```
 
-> Nếu cần cài thêm PyQt5:
-> ```powershell
-> pip install PyQt5
-> ```
+**Bước 2: Cài đặt thư viện (Dependencies)**
+```powershell
+pip install -r requirements.txt
+```
+> *Lưu ý: Nếu lúc chạy giao diện bạn gặp lỗi thiếu PyQt5, hãy chạy thêm lệnh: `pip install PyQt5`*
+
+**Bước 3: Chạy Giao diện Ứng dụng (GUI)**
+Để mở ứng dụng Desktop hỗ trợ load ảnh, dự đoán và sinh Grad-CAM Heatmap:
+```powershell
+python gui_app.py
+```
+
+**Bước 4: Chạy Huấn luyện Mô hình (Training)**
+Dự án được điều khiển thông qua cấu hình trong file YAML. Để bắt đầu huấn luyện từ đầu:
+```powershell
+python main.py --config experiments/baseline.yaml
+```
 
 ---
 

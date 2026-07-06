@@ -42,6 +42,23 @@ def main():
     val_samples = len(val_loader.dataset)
     logger.info(f"Train samples: {train_samples} ({len(train_loader)} batches) | Val samples: {val_samples} ({len(val_loader)} batches)")
     
+    # Save run info to docs/
+    import datetime
+    os.makedirs("docs", exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_info_file = f"docs/run_info_{timestamp}.txt"
+    with open(run_info_file, "w", encoding="utf-8") as f:
+        f.write(f"=== CHI TIẾT LẦN CHẠY ({timestamp}) ===\n")
+        f.write(f"Chế độ chạy (Mode): {mode_name} Mode\n")
+        f.write(f"Số lượng Epochs: {mode.epochs}\n")
+        f.write(f"Kích thước ảnh (Image Size): {mode.image_size}x{mode.image_size}\n")
+        f.write(f"Kích thước Batch (Batch Size): {mode.batch_size}\n")
+        f.write(f"Tỷ lệ dữ liệu sử dụng (Subset Ratio): {mode.subset_ratio * 100}%\n")
+        f.write(f"Tổng số ảnh dùng để Train: {train_samples} ảnh\n")
+        f.write(f"Tổng số ảnh dùng để Validation: {val_samples} ảnh\n")
+    logger.info(f"Đã lưu thông tin cấu hình chạy vào: {run_info_file}")
+    
+
     # Initialize Model
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info(f"Using device: {device}")
@@ -103,6 +120,9 @@ def main():
         # Save best model checkpoint
         if val_metrics['loss'] < best_val_loss:
             best_val_loss = val_metrics['loss']
+            best_epoch = epoch
+            best_val_acc = val_metrics['accuracy']
+            best_val_f1 = val_metrics['f1']
             epochs_no_improve = 0
             trainer.save_checkpoint(
                 state={
@@ -122,7 +142,18 @@ def main():
                 logger.info(f"Early stopping triggered at epoch {epoch}.")
                 break
 
-    logger.info(f"Phase 2 Training Completed. Best Val Loss: {best_val_loss:.4f}")
+    logger.info(f"Phase 2 Training Completed. Best Val Loss: {best_val_loss:.4f} (Epoch {best_epoch})")
+    
+    # Ghi kết quả vào file run_info
+    with open(run_info_file, "a", encoding="utf-8") as f:
+        f.write(f"\n=== KẾT QUẢ HUẤN LUYỆN ===\n")
+        f.write(f"Dừng ở Epoch: {epoch}\n")
+        f.write(f"Epoch tốt nhất: {best_epoch}\n")
+        f.write(f"Validation Loss tốt nhất: {best_val_loss:.4f}\n")
+        f.write(f"Validation Accuracy: {best_val_acc:.4f}\n")
+        f.write(f"Validation F1-Score: {best_val_f1:.4f}\n")
+        f.write(f"Model đã được lưu tại: {save_dir}/best_model.pth\n")
+    logger.info(f"Đã cập nhật kết quả huấn luyện vào file: {run_info_file}")
 
 if __name__ == '__main__':
     main()

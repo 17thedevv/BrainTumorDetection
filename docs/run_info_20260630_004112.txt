@@ -1,0 +1,16 @@
+=== CHI TIẾT LẦN CHẠY (20260630_004112) ===
+Chế độ chạy (Mode): Development Mode
+Số lượng Epochs: 10
+Kích thước ảnh (Image Size): 128x128
+Kích thước Batch (Batch Size): 8
+Tỷ lệ dữ liệu sử dụng (Subset Ratio): 70.0%
+Tổng số ảnh dùng để Train: 3916 ảnh
+Tổng số ảnh dùng để Validation: 1600 ảnh
+
+=== KẾT QUẢ HUẤN LUYỆN ===
+Dừng ở Epoch: 10
+Epoch tốt nhất: 10
+Validation Loss tốt nhất: 0.4544
+Validation Accuracy: 0.8769
+Validation F1-Score: 0.8727
+Model đã được lưu tại: saved_model/best_model.pth

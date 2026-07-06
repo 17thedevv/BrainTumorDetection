@@ -1,0 +1,8 @@
+=== CHI TIẾT LẦN CHẠY (20260630_002403) ===
+Chế độ chạy (Mode): Development Mode
+Số lượng Epochs: 10
+Kích thước ảnh (Image Size): 128x128
+Kích thước Batch (Batch Size): 8
+Tỷ lệ dữ liệu sử dụng (Subset Ratio): 70.0%
+Tổng số ảnh dùng để Train: 3916 ảnh
+Tổng số ảnh dùng để Validation: 1600 ảnh
