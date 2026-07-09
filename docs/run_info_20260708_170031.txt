@@ -1,0 +1,16 @@
+=== CHI TIẾT LẦN CHẠY (20260708_170031) ===
+Chế độ chạy (Mode): Research Mode
+Số lượng Epochs: 30
+Kích thước ảnh (Image Size): 224x224
+Kích thước Batch (Batch Size): 32
+Tỷ lệ dữ liệu sử dụng (Subset Ratio): 100.0%
+Tổng số ảnh dùng để Train: 5600 ảnh
+Tổng số ảnh dùng để Validation: 1600 ảnh
+
+=== KẾT QUẢ HUẤN LUYỆN ===
+Dừng ở Epoch: 30
+Epoch tốt nhất: 24
+Validation Loss tốt nhất: 0.3818
+Validation Accuracy: 0.9125
+Validation F1-Score: 0.9104
+Model đã được lưu tại: saved_model/best_model.pth

@@ -50,12 +50,17 @@ def main():
     with open(run_info_file, "w", encoding="utf-8") as f:
         f.write(f"=== CHI TIẾT LẦN CHẠY ({timestamp}) ===\n")
         f.write(f"Chế độ chạy (Mode): {mode_name} Mode\n")
-        f.write(f"Số lượng Epochs: {mode.epochs}\n")
+        f.write(f"Số lượng Epochs tối đa: {mode.epochs}\n")
         f.write(f"Kích thước ảnh (Image Size): {mode.image_size}x{mode.image_size}\n")
         f.write(f"Kích thước Batch (Batch Size): {mode.batch_size}\n")
-        f.write(f"Tỷ lệ dữ liệu sử dụng (Subset Ratio): {mode.subset_ratio * 100}%\n")
+        f.write(f"Learning Rate: {config.training.learning_rate}\n")
+        f.write(f"Weight Decay: {config.training.weight_decay}\n")
+        f.write(f"Tỷ lệ dữ liệu sử dụng (Subset Ratio): {mode.subset_ratio * 100:.0f}%\n")
         f.write(f"Tổng số ảnh dùng để Train: {train_samples} ảnh\n")
         f.write(f"Tổng số ảnh dùng để Validation: {val_samples} ảnh\n")
+        f.write(f"\n{'='*90}\n")
+        f.write(f"{'Epoch':>6} | {'T-Loss':>8} | {'T-Acc':>7} | {'T-F1':>7} | {'T-Prec':>7} | {'T-Rec':>7} | {'V-Loss':>8} | {'V-Acc':>7} | {'V-F1':>7} | {'V-Prec':>7} | {'V-Rec':>7} | {'Time(s)':>8} | {'Best':>5}\n")
+        f.write(f"{'='*90}\n")
     logger.info(f"Đã lưu thông tin cấu hình chạy vào: {run_info_file}")
     
 
@@ -93,6 +98,9 @@ def main():
     
     logger.info(f"Starting Phase 2: Supervised Baseline Training | Early stopping patience: {early_stopping_patience}")
     
+    import time
+    total_train_start = time.time()
+
     for epoch in range(1, mode.epochs + 1):
         logger.info(f"--- Epoch {epoch}/{mode.epochs} ---")
         
@@ -116,9 +124,11 @@ def main():
         )
         
         scheduler.step()
+        epoch_time = train_metrics.get('epoch_time', 0)
         
         # Save best model checkpoint
-        if val_metrics['loss'] < best_val_loss:
+        is_best = val_metrics['loss'] < best_val_loss
+        if is_best:
             best_val_loss = val_metrics['loss']
             best_epoch = epoch
             best_val_acc = val_metrics['accuracy']
@@ -138,21 +148,46 @@ def main():
         else:
             epochs_no_improve += 1
             logger.info(f"No improvement for {epochs_no_improve}/{early_stopping_patience} epoch(s).")
-            if epochs_no_improve >= early_stopping_patience:
-                logger.info(f"Early stopping triggered at epoch {epoch}.")
-                break
+        
+        # Ghi chi tiết epoch vào file run_info
+        with open(run_info_file, "a", encoding="utf-8") as f:
+            best_marker = " <--" if is_best else ""
+            f.write(
+                f"{epoch:>6} | "
+                f"{train_metrics['loss']:>8.4f} | "
+                f"{train_metrics['accuracy']:>7.4f} | "
+                f"{train_metrics['f1']:>7.4f} | "
+                f"{train_metrics['precision']:>7.4f} | "
+                f"{train_metrics['recall']:>7.4f} | "
+                f"{val_metrics['loss']:>8.4f} | "
+                f"{val_metrics['accuracy']:>7.4f} | "
+                f"{val_metrics['f1']:>7.4f} | "
+                f"{val_metrics['precision']:>7.4f} | "
+                f"{val_metrics['recall']:>7.4f} | "
+                f"{epoch_time:>8.1f}{best_marker}\n"
+            )
+        
+        if not is_best and epochs_no_improve >= early_stopping_patience:
+            logger.info(f"Early stopping triggered at epoch {epoch}.")
+            break
+    
+    total_train_time = time.time() - total_train_start
 
     logger.info(f"Phase 2 Training Completed. Best Val Loss: {best_val_loss:.4f} (Epoch {best_epoch})")
     
-    # Ghi kết quả vào file run_info
+    # Ghi kết quả tổng kết vào file run_info
+    hours, rem = divmod(int(total_train_time), 3600)
+    minutes, seconds = divmod(rem, 60)
     with open(run_info_file, "a", encoding="utf-8") as f:
-        f.write(f"\n=== KẾT QUẢ HUẤN LUYỆN ===\n")
-        f.write(f"Dừng ở Epoch: {epoch}\n")
-        f.write(f"Epoch tốt nhất: {best_epoch}\n")
-        f.write(f"Validation Loss tốt nhất: {best_val_loss:.4f}\n")
-        f.write(f"Validation Accuracy: {best_val_acc:.4f}\n")
-        f.write(f"Validation F1-Score: {best_val_f1:.4f}\n")
-        f.write(f"Model đã được lưu tại: {save_dir}/best_model.pth\n")
+        f.write(f"{'='*90}\n")
+        f.write(f"\n=== KẾT QUẢ TỔNG KẾT ===\n")
+        f.write(f"Tổng thời gian huấn luyện : {hours:02d}h {minutes:02d}m {seconds:02d}s ({total_train_time:.1f}s)\n")
+        f.write(f"Dừng ở Epoch              : {epoch}/{mode.epochs}\n")
+        f.write(f"Epoch tốt nhất            : {best_epoch}\n")
+        f.write(f"Validation Loss tốt nhất  : {best_val_loss:.4f}\n")
+        f.write(f"Validation Accuracy       : {best_val_acc:.4f}\n")
+        f.write(f"Validation F1-Score       : {best_val_f1:.4f}\n")
+        f.write(f"Model đã được lưu tại     : {save_dir}/best_model.pth\n")
     logger.info(f"Đã cập nhật kết quả huấn luyện vào file: {run_info_file}")
 
 if __name__ == '__main__':

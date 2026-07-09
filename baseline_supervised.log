@@ -638,3 +638,131 @@
 2026-06-30 01:57:45,814 - brain_tumor_detection - INFO - [Val]   Loss: 0.4544 | Acc: 0.8769 | F1: 0.8727 | Prec: 0.8845 | Rec: 0.8769
 2026-06-30 01:57:45,837 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
 2026-06-30 01:57:45,838 - brain_tumor_detection - INFO - Phase 2 Training Completed. Best Val Loss: 0.4544 (Epoch 10)
+2026-07-08 17:00:31,140 - brain_tumor_detection - INFO - Loaded configuration from experiments/baseline.yaml
+2026-07-08 17:00:31,141 - brain_tumor_detection - INFO - Running in [Research Mode] | epochs=30 | image_size=224 | batch_size=32 | subset_ratio=1.0
+2026-07-08 17:00:31,240 - brain_tumor_detection - INFO - Random seed set to 42
+2026-07-08 17:00:31,401 - brain_tumor_detection - INFO - Train samples: 5600 (175 batches) | Val samples: 1600 (50 batches)
+2026-07-08 17:00:31,439 - brain_tumor_detection - INFO - Using device: cpu
+2026-07-08 17:00:31,482 - brain_tumor_detection - INFO - Model: CustomCNN | Trainable parameters: 1,702,916
+2026-07-08 17:00:31,485 - brain_tumor_detection - INFO - Starting Phase 2: Supervised Baseline Training | Early stopping patience: 7
+2026-07-08 17:00:31,486 - brain_tumor_detection - INFO - --- Epoch 1/30 ---
+2026-07-08 17:04:12,093 - brain_tumor_detection - INFO - [Train] Loss: 0.8490 | Acc: 0.6555 | F1: 0.6541 | Prec: 0.6567 | Rec: 0.6555 | Time: 220.6s
+2026-07-08 17:04:57,648 - brain_tumor_detection - INFO - [Val]   Loss: 1.1787 | Acc: 0.5375 | F1: 0.4677 | Prec: 0.6634 | Rec: 0.5375
+2026-07-08 17:04:57,708 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 17:04:57,711 - brain_tumor_detection - INFO - --- Epoch 2/30 ---
+2026-07-08 17:10:26,827 - brain_tumor_detection - INFO - [Train] Loss: 0.5915 | Acc: 0.7739 | F1: 0.7716 | Prec: 0.7713 | Rec: 0.7739 | Time: 329.1s
+2026-07-08 17:11:12,161 - brain_tumor_detection - INFO - [Val]   Loss: 0.8481 | Acc: 0.6969 | F1: 0.6913 | Prec: 0.7429 | Rec: 0.6969
+2026-07-08 17:11:12,188 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 17:11:12,189 - brain_tumor_detection - INFO - --- Epoch 3/30 ---
+2026-07-08 17:15:07,674 - brain_tumor_detection - INFO - [Train] Loss: 0.4883 | Acc: 0.8193 | F1: 0.8182 | Prec: 0.8178 | Rec: 0.8193 | Time: 235.5s
+2026-07-08 17:15:35,919 - brain_tumor_detection - INFO - [Val]   Loss: 0.7141 | Acc: 0.7625 | F1: 0.7511 | Prec: 0.7842 | Rec: 0.7625
+2026-07-08 17:15:35,943 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 17:15:35,944 - brain_tumor_detection - INFO - --- Epoch 4/30 ---
+2026-07-08 17:26:34,093 - brain_tumor_detection - INFO - [Train] Loss: 0.4582 | Acc: 0.8213 | F1: 0.8202 | Prec: 0.8198 | Rec: 0.8213 | Time: 658.1s
+2026-07-08 17:27:19,999 - brain_tumor_detection - INFO - [Val]   Loss: 0.6133 | Acc: 0.7825 | F1: 0.7700 | Prec: 0.7816 | Rec: 0.7825
+2026-07-08 17:27:20,027 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 17:27:20,028 - brain_tumor_detection - INFO - --- Epoch 5/30 ---
+2026-07-08 17:32:27,810 - brain_tumor_detection - INFO - [Train] Loss: 0.4120 | Acc: 0.8462 | F1: 0.8455 | Prec: 0.8456 | Rec: 0.8463 | Time: 307.8s
+2026-07-08 17:32:55,492 - brain_tumor_detection - INFO - [Val]   Loss: 0.9498 | Acc: 0.6944 | F1: 0.6826 | Prec: 0.7656 | Rec: 0.6944
+2026-07-08 17:32:55,493 - brain_tumor_detection - INFO - No improvement for 1/7 epoch(s).
+2026-07-08 17:32:55,493 - brain_tumor_detection - INFO - --- Epoch 6/30 ---
+2026-07-08 17:35:56,395 - brain_tumor_detection - INFO - [Train] Loss: 0.3721 | Acc: 0.8641 | F1: 0.8638 | Prec: 0.8644 | Rec: 0.8641 | Time: 180.9s
+2026-07-08 17:36:26,723 - brain_tumor_detection - INFO - [Val]   Loss: 0.9234 | Acc: 0.7081 | F1: 0.7090 | Prec: 0.7806 | Rec: 0.7081
+2026-07-08 17:36:26,723 - brain_tumor_detection - INFO - No improvement for 2/7 epoch(s).
+2026-07-08 17:36:26,723 - brain_tumor_detection - INFO - --- Epoch 7/30 ---
+2026-07-08 17:41:22,271 - brain_tumor_detection - INFO - [Train] Loss: 0.3636 | Acc: 0.8679 | F1: 0.8674 | Prec: 0.8676 | Rec: 0.8679 | Time: 295.5s
+2026-07-08 17:41:55,975 - brain_tumor_detection - INFO - [Val]   Loss: 0.5844 | Acc: 0.8213 | F1: 0.8128 | Prec: 0.8382 | Rec: 0.8213
+2026-07-08 17:41:56,001 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 17:41:56,002 - brain_tumor_detection - INFO - --- Epoch 8/30 ---
+2026-07-08 17:47:17,792 - brain_tumor_detection - INFO - [Train] Loss: 0.3485 | Acc: 0.8712 | F1: 0.8712 | Prec: 0.8719 | Rec: 0.8712 | Time: 321.8s
+2026-07-08 17:48:04,882 - brain_tumor_detection - INFO - [Val]   Loss: 0.6727 | Acc: 0.7700 | F1: 0.7700 | Prec: 0.8395 | Rec: 0.7700
+2026-07-08 17:48:04,883 - brain_tumor_detection - INFO - No improvement for 1/7 epoch(s).
+2026-07-08 17:48:04,883 - brain_tumor_detection - INFO - --- Epoch 9/30 ---
+2026-07-08 17:52:10,518 - brain_tumor_detection - INFO - [Train] Loss: 0.3220 | Acc: 0.8821 | F1: 0.8819 | Prec: 0.8824 | Rec: 0.8821 | Time: 245.6s
+2026-07-08 17:52:37,525 - brain_tumor_detection - INFO - [Val]   Loss: 0.5595 | Acc: 0.8063 | F1: 0.7957 | Prec: 0.8176 | Rec: 0.8063
+2026-07-08 17:52:37,544 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 17:52:37,544 - brain_tumor_detection - INFO - --- Epoch 10/30 ---
+2026-07-08 17:55:25,535 - brain_tumor_detection - INFO - [Train] Loss: 0.3020 | Acc: 0.8895 | F1: 0.8895 | Prec: 0.8905 | Rec: 0.8895 | Time: 168.0s
+2026-07-08 17:55:52,858 - brain_tumor_detection - INFO - [Val]   Loss: 0.6396 | Acc: 0.8150 | F1: 0.8115 | Prec: 0.8425 | Rec: 0.8150
+2026-07-08 17:55:52,858 - brain_tumor_detection - INFO - No improvement for 1/7 epoch(s).
+2026-07-08 17:55:52,859 - brain_tumor_detection - INFO - --- Epoch 11/30 ---
+2026-07-08 18:06:58,655 - brain_tumor_detection - INFO - [Train] Loss: 0.2942 | Acc: 0.8912 | F1: 0.8911 | Prec: 0.8913 | Rec: 0.8912 | Time: 665.8s
+2026-07-08 18:07:27,167 - brain_tumor_detection - INFO - [Val]   Loss: 0.6997 | Acc: 0.7956 | F1: 0.7845 | Prec: 0.8213 | Rec: 0.7956
+2026-07-08 18:07:27,167 - brain_tumor_detection - INFO - No improvement for 2/7 epoch(s).
+2026-07-08 18:07:27,167 - brain_tumor_detection - INFO - --- Epoch 12/30 ---
+2026-07-08 18:10:14,553 - brain_tumor_detection - INFO - [Train] Loss: 0.2685 | Acc: 0.9030 | F1: 0.9029 | Prec: 0.9033 | Rec: 0.9030 | Time: 167.4s
+2026-07-08 18:10:41,348 - brain_tumor_detection - INFO - [Val]   Loss: 0.5526 | Acc: 0.8131 | F1: 0.8117 | Prec: 0.8261 | Rec: 0.8131
+2026-07-08 18:10:41,365 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 18:10:41,365 - brain_tumor_detection - INFO - --- Epoch 13/30 ---
+2026-07-08 18:13:28,662 - brain_tumor_detection - INFO - [Train] Loss: 0.2653 | Acc: 0.9025 | F1: 0.9024 | Prec: 0.9028 | Rec: 0.9025 | Time: 167.3s
+2026-07-08 18:13:54,923 - brain_tumor_detection - INFO - [Val]   Loss: 0.4609 | Acc: 0.8800 | F1: 0.8763 | Prec: 0.8865 | Rec: 0.8800
+2026-07-08 18:13:54,944 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 18:13:54,944 - brain_tumor_detection - INFO - --- Epoch 14/30 ---
+2026-07-08 18:16:45,161 - brain_tumor_detection - INFO - [Train] Loss: 0.2534 | Acc: 0.9084 | F1: 0.9084 | Prec: 0.9088 | Rec: 0.9084 | Time: 170.2s
+2026-07-08 18:17:12,693 - brain_tumor_detection - INFO - [Val]   Loss: 0.4234 | Acc: 0.8800 | F1: 0.8766 | Prec: 0.8800 | Rec: 0.8800
+2026-07-08 18:17:12,716 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 18:17:12,717 - brain_tumor_detection - INFO - --- Epoch 15/30 ---
+2026-07-08 18:20:05,465 - brain_tumor_detection - INFO - [Train] Loss: 0.2521 | Acc: 0.9089 | F1: 0.9090 | Prec: 0.9096 | Rec: 0.9089 | Time: 172.7s
+2026-07-08 18:20:33,187 - brain_tumor_detection - INFO - [Val]   Loss: 0.5151 | Acc: 0.8644 | F1: 0.8596 | Prec: 0.8816 | Rec: 0.8644
+2026-07-08 18:20:33,187 - brain_tumor_detection - INFO - No improvement for 1/7 epoch(s).
+2026-07-08 18:20:33,188 - brain_tumor_detection - INFO - --- Epoch 16/30 ---
+2026-07-08 18:23:25,752 - brain_tumor_detection - INFO - [Train] Loss: 0.2308 | Acc: 0.9163 | F1: 0.9160 | Prec: 0.9163 | Rec: 0.9163 | Time: 172.5s
+2026-07-08 18:23:53,286 - brain_tumor_detection - INFO - [Val]   Loss: 0.4606 | Acc: 0.8631 | F1: 0.8622 | Prec: 0.8729 | Rec: 0.8631
+2026-07-08 18:23:53,286 - brain_tumor_detection - INFO - No improvement for 2/7 epoch(s).
+2026-07-08 18:23:53,286 - brain_tumor_detection - INFO - --- Epoch 17/30 ---
+2026-07-08 18:26:46,745 - brain_tumor_detection - INFO - [Train] Loss: 0.2086 | Acc: 0.9264 | F1: 0.9263 | Prec: 0.9266 | Rec: 0.9264 | Time: 173.4s
+2026-07-08 18:28:06,937 - brain_tumor_detection - INFO - [Val]   Loss: 0.4184 | Acc: 0.9031 | F1: 0.9005 | Prec: 0.9108 | Rec: 0.9031
+2026-07-08 18:28:06,958 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 18:28:06,958 - brain_tumor_detection - INFO - --- Epoch 18/30 ---
+2026-07-08 18:30:59,332 - brain_tumor_detection - INFO - [Train] Loss: 0.2002 | Acc: 0.9261 | F1: 0.9260 | Prec: 0.9261 | Rec: 0.9261 | Time: 172.4s
+2026-07-08 18:31:27,213 - brain_tumor_detection - INFO - [Val]   Loss: 0.6604 | Acc: 0.8313 | F1: 0.8181 | Prec: 0.8589 | Rec: 0.8313
+2026-07-08 18:31:27,213 - brain_tumor_detection - INFO - No improvement for 1/7 epoch(s).
+2026-07-08 18:31:27,214 - brain_tumor_detection - INFO - --- Epoch 19/30 ---
+2026-07-08 18:41:19,968 - brain_tumor_detection - INFO - [Train] Loss: 0.1797 | Acc: 0.9411 | F1: 0.9410 | Prec: 0.9412 | Rec: 0.9411 | Time: 592.7s
+2026-07-08 18:41:47,052 - brain_tumor_detection - INFO - [Val]   Loss: 0.5776 | Acc: 0.8575 | F1: 0.8540 | Prec: 0.8758 | Rec: 0.8575
+2026-07-08 18:41:47,053 - brain_tumor_detection - INFO - No improvement for 2/7 epoch(s).
+2026-07-08 18:41:47,053 - brain_tumor_detection - INFO - --- Epoch 20/30 ---
+2026-07-08 18:44:37,375 - brain_tumor_detection - INFO - [Train] Loss: 0.1678 | Acc: 0.9427 | F1: 0.9427 | Prec: 0.9430 | Rec: 0.9427 | Time: 170.3s
+2026-07-08 18:45:03,584 - brain_tumor_detection - INFO - [Val]   Loss: 0.5687 | Acc: 0.8562 | F1: 0.8494 | Prec: 0.8734 | Rec: 0.8562
+2026-07-08 18:45:03,584 - brain_tumor_detection - INFO - No improvement for 3/7 epoch(s).
+2026-07-08 18:45:03,584 - brain_tumor_detection - INFO - --- Epoch 21/30 ---
+2026-07-08 18:47:48,350 - brain_tumor_detection - INFO - [Train] Loss: 0.1730 | Acc: 0.9404 | F1: 0.9404 | Prec: 0.9406 | Rec: 0.9404 | Time: 164.7s
+2026-07-08 18:49:29,667 - brain_tumor_detection - INFO - [Val]   Loss: 0.4410 | Acc: 0.8912 | F1: 0.8869 | Prec: 0.9060 | Rec: 0.8912
+2026-07-08 18:49:29,667 - brain_tumor_detection - INFO - No improvement for 4/7 epoch(s).
+2026-07-08 18:49:29,668 - brain_tumor_detection - INFO - --- Epoch 22/30 ---
+2026-07-08 18:52:12,020 - brain_tumor_detection - INFO - [Train] Loss: 0.1587 | Acc: 0.9470 | F1: 0.9470 | Prec: 0.9473 | Rec: 0.9470 | Time: 162.3s
+2026-07-08 18:53:16,019 - brain_tumor_detection - INFO - [Val]   Loss: 0.4339 | Acc: 0.8950 | F1: 0.8926 | Prec: 0.9012 | Rec: 0.8950
+2026-07-08 18:53:16,020 - brain_tumor_detection - INFO - No improvement for 5/7 epoch(s).
+2026-07-08 18:53:16,020 - brain_tumor_detection - INFO - --- Epoch 23/30 ---
+2026-07-08 18:56:07,431 - brain_tumor_detection - INFO - [Train] Loss: 0.1495 | Acc: 0.9511 | F1: 0.9510 | Prec: 0.9510 | Rec: 0.9511 | Time: 171.4s
+2026-07-08 18:56:34,735 - brain_tumor_detection - INFO - [Val]   Loss: 0.4777 | Acc: 0.8912 | F1: 0.8899 | Prec: 0.9041 | Rec: 0.8912
+2026-07-08 18:56:34,735 - brain_tumor_detection - INFO - No improvement for 6/7 epoch(s).
+2026-07-08 18:56:34,736 - brain_tumor_detection - INFO - --- Epoch 24/30 ---
+2026-07-08 18:59:27,914 - brain_tumor_detection - INFO - [Train] Loss: 0.1452 | Acc: 0.9514 | F1: 0.9514 | Prec: 0.9515 | Rec: 0.9514 | Time: 173.2s
+2026-07-08 18:59:55,341 - brain_tumor_detection - INFO - [Val]   Loss: 0.3818 | Acc: 0.9125 | F1: 0.9104 | Prec: 0.9178 | Rec: 0.9125
+2026-07-08 18:59:55,366 - brain_tumor_detection - INFO - Checkpoint saved to saved_model\best_model.pth
+2026-07-08 18:59:55,366 - brain_tumor_detection - INFO - --- Epoch 25/30 ---
+2026-07-08 19:02:57,689 - brain_tumor_detection - INFO - [Train] Loss: 0.1398 | Acc: 0.9507 | F1: 0.9508 | Prec: 0.9510 | Rec: 0.9507 | Time: 182.3s
+2026-07-08 19:03:24,006 - brain_tumor_detection - INFO - [Val]   Loss: 0.4064 | Acc: 0.9087 | F1: 0.9071 | Prec: 0.9140 | Rec: 0.9088
+2026-07-08 19:03:24,006 - brain_tumor_detection - INFO - No improvement for 1/7 epoch(s).
+2026-07-08 19:03:24,007 - brain_tumor_detection - INFO - --- Epoch 26/30 ---
+2026-07-08 19:06:09,236 - brain_tumor_detection - INFO - [Train] Loss: 0.1389 | Acc: 0.9521 | F1: 0.9522 | Prec: 0.9523 | Rec: 0.9521 | Time: 165.2s
+2026-07-08 19:06:48,697 - brain_tumor_detection - INFO - [Val]   Loss: 0.3981 | Acc: 0.9119 | F1: 0.9098 | Prec: 0.9192 | Rec: 0.9119
+2026-07-08 19:06:48,697 - brain_tumor_detection - INFO - No improvement for 2/7 epoch(s).
+2026-07-08 19:06:48,697 - brain_tumor_detection - INFO - --- Epoch 27/30 ---
+2026-07-08 19:22:13,144 - brain_tumor_detection - INFO - [Train] Loss: 0.1332 | Acc: 0.9545 | F1: 0.9544 | Prec: 0.9545 | Rec: 0.9545 | Time: 924.4s
+2026-07-08 19:22:40,249 - brain_tumor_detection - INFO - [Val]   Loss: 0.4107 | Acc: 0.9094 | F1: 0.9076 | Prec: 0.9162 | Rec: 0.9094
+2026-07-08 19:22:40,249 - brain_tumor_detection - INFO - No improvement for 3/7 epoch(s).
+2026-07-08 19:22:40,250 - brain_tumor_detection - INFO - --- Epoch 28/30 ---
+2026-07-08 19:25:29,687 - brain_tumor_detection - INFO - [Train] Loss: 0.1273 | Acc: 0.9616 | F1: 0.9616 | Prec: 0.9618 | Rec: 0.9616 | Time: 169.4s
+2026-07-08 19:25:56,839 - brain_tumor_detection - INFO - [Val]   Loss: 0.3929 | Acc: 0.9156 | F1: 0.9137 | Prec: 0.9217 | Rec: 0.9156
+2026-07-08 19:25:56,839 - brain_tumor_detection - INFO - No improvement for 4/7 epoch(s).
+2026-07-08 19:25:56,839 - brain_tumor_detection - INFO - --- Epoch 29/30 ---
+2026-07-08 19:33:03,861 - brain_tumor_detection - INFO - [Train] Loss: 0.1256 | Acc: 0.9571 | F1: 0.9571 | Prec: 0.9572 | Rec: 0.9571 | Time: 427.0s
+2026-07-08 19:33:29,800 - brain_tumor_detection - INFO - [Val]   Loss: 0.3875 | Acc: 0.9144 | F1: 0.9127 | Prec: 0.9206 | Rec: 0.9144
+2026-07-08 19:33:29,801 - brain_tumor_detection - INFO - No improvement for 5/7 epoch(s).
+2026-07-08 19:33:29,801 - brain_tumor_detection - INFO - --- Epoch 30/30 ---
+2026-07-08 19:41:20,601 - brain_tumor_detection - INFO - [Train] Loss: 0.1277 | Acc: 0.9579 | F1: 0.9578 | Prec: 0.9578 | Rec: 0.9579 | Time: 470.8s
+2026-07-08 19:41:47,520 - brain_tumor_detection - INFO - [Val]   Loss: 0.3907 | Acc: 0.9119 | F1: 0.9098 | Prec: 0.9179 | Rec: 0.9119
+2026-07-08 19:41:47,520 - brain_tumor_detection - INFO - No improvement for 6/7 epoch(s).
+2026-07-08 19:41:47,520 - brain_tumor_detection - INFO - Phase 2 Training Completed. Best Val Loss: 0.3818 (Epoch 24)

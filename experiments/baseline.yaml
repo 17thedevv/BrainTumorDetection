@@ -19,14 +19,14 @@ training:
   ssl_enabled: false
 
 development:
-  enabled: true
+  enabled: false
   subset_ratio: 0.7
   image_size: 128
   batch_size: 8
   epochs: 10
 
 research:
-  enabled: false
+  enabled: true
   subset_ratio: 1.0
   image_size: 224
   batch_size: 32
