@@ -72,27 +72,35 @@ class Predictor:
     def __init__(self, model_path: str, image_size: int = 224, num_classes: int = 4):
         # Lazy import — deferred until model is actually loaded
         import torch
-        from models.cnn import BaselineCNN
+        from models.cnn import BaselineCNN, ImprovedCNN
 
         self.image_size = image_size
         self.num_classes = num_classes
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self._torch = torch
         self._BaselineCNN = BaselineCNN
+        self._ImprovedCNN = ImprovedCNN
 
         self.model = self._load_model(model_path)
 
     def _load_model(self, model_path: str):
         torch = self._torch
         BaselineCNN = self._BaselineCNN
+        ImprovedCNN = self._ImprovedCNN
 
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
-        model = BaselineCNN(num_classes=self.num_classes, pretrained=False)
-
         checkpoint = torch.load(model_path, map_location=self.device)
         state_dict = checkpoint.get('state_dict', checkpoint)
+
+        # Detect architecture automatically from checkpoint state_dict keys
+        is_improved = any(k.startswith('stem.') or k.startswith('layer1.') for k in state_dict.keys())
+        if is_improved:
+            model = ImprovedCNN(num_classes=self.num_classes, pretrained=False)
+        else:
+            model = BaselineCNN(num_classes=self.num_classes, pretrained=False)
+
         model.load_state_dict(state_dict)
 
         model.to(self.device)
@@ -133,8 +141,11 @@ class Predictor:
         # 1. Run forward pass (with grad enabled for Grad-CAM)
         self.model.zero_grad()
         
-        # Hook last conv layer: self.model.features[-4] is Conv2d in block 5
-        target_layer = self.model.features[-4]
+        # Hook last conv layer for Grad-CAM (supports both ImprovedCNN and BaselineCNN)
+        if hasattr(self.model, 'layer4'):
+            target_layer = self.model.layer4[-1].conv2
+        else:
+            target_layer = self.model.features[-4]
         cam_extractor = GradCAM(self.model, target_layer, torch)
         
         logits = self.model(tensor)

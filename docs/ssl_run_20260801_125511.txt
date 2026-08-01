@@ -1,0 +1,17 @@
+=== SSL RUN (20260801_125511) ===
+Experiment       : ssl_pseudo_label
+Mode             : Research
+Model            : improved_cnn
+Labeled per class: 250 → 1000 total
+Unlabeled total  : 8461 (ds1=4600, ds2=3861)
+Val samples      : 1600
+Warmup epochs    : 15
+SSL epochs       : 20
+Threshold        : 0.85 → 0.95
+Image size       : 224×224
+Batch size       : 32
+LR               : 0.0001
+
+====================================================================================================
+ Phase | Epoch |   T-Loss |   T-Acc |    T-F1 |   V-Loss |   V-Acc |    V-F1 |  #Pseudo | Thresh |    Time | Note
+====================================================================================================

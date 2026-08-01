@@ -1,0 +1,11 @@
+gộp dts1 
+- có nhãn khoảng 1000 ảnh
+
+- không nhãn 6200 ảnh
+
+- mất cân bằng dữ liệu
+
+- semi Supervised
+- sử dụng mô hình mới hơn
+- ưu tiên độ chính xác so với thời gian
+- vẽ bảng chỉ số

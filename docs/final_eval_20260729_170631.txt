@@ -1,0 +1,15 @@
+=== SSL BEST CHECKPOINT EVALUATION (20260729_170631) ===
+Model            : improved_cnn
+Best Epoch       : 12
+Best Val Loss    : 0.5824045676365495
+
+              precision    recall  f1-score   support
+
+      Glioma       0.79      0.67      0.72       400
+  Meningioma       0.80      0.54      0.64       400
+    No Tumor       0.82      0.97      0.89       400
+   Pituitary       0.76      0.99      0.86       400
+
+    accuracy                           0.79      1600
+   macro avg       0.79      0.79      0.78      1600
+weighted avg       0.79      0.79      0.78      1600

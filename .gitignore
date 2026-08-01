@@ -1,26 +1,18 @@
-# Byte-compiled / optimized / DLL files
+# Ignore virtual environment and cache to prevent Git from freezing on 50,000+ package files
+venv/
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environment
-venv/
-.venv/
-env/
-
-# Model checkpoint (large binary – use Git LFS if needed)
-saved_model/
-
-# Dataset (usually not committed)
-data/
-
-# pytest cache
 .pytest_cache/
 
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
+# Ignore heavy datasets & model weights
+data/
+saved_model/
+*.pth
+*.h5
+*.pt
+*.log
+*.zip
+*.tar
+*.gz
+scratch/
+temp.txt
