@@ -1,0 +1,58 @@
+# =============================================================================
+# SSL Experiment v2 — Tất cả cải tiến tăng accuracy
+# =============================================================================
+# Cải tiến so với v1:
+#   [A1] Data Augmentation mạnh (RandomCrop, VerticalFlip, Affine, GaussianBlur, RandomErasing)
+#   [A2] Mixup Training (alpha=0.2)
+#   [B1] SE-Block Channel Attention trong ResidualBlock
+#   [B2] Classifier Head 3-layer + BatchNorm1d
+#   [B3] Label Smoothing (0.1)
+#   [C1] LR Warmup 3 epochs + CosineAnnealingWarmRestarts
+#   [C3] Gradient Clipping (max_norm=1.0)
+#   [D1] Confidence-Weighted Pseudo Labels
+# =============================================================================
+
+experiment_name: "ssl_v2_enhanced"
+project_name: "brain_tumor_detection"
+seed: 42
+
+data:
+  dataset1_train_path: "./data/dataset1/Training"
+  dataset1_test_path: "./data/dataset1/Testing"
+  dataset2_path: "./data/dataset2"
+  num_workers: 0
+
+model:
+  name: "improved_cnn"      # ResNet-18 style + SE-Block, from scratch
+  num_classes: 4
+  pretrained: false
+
+training:
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  ssl_enabled: true
+
+ssl:
+  labeled_per_class: 450        # 450 × 4 class = 1800 ảnh có nhãn (giữ nguyên v1)
+  warmup_epochs: 15             # Phase A: supervised warmup
+  ssl_epochs: 25                # Phase B: tăng từ 20 → 25 epochs (model mới cần thêm thời gian)
+  pseudo_threshold_start: 0.90  # Ngưỡng confidence ban đầu
+  pseudo_threshold_end: 0.97    # Ngưỡng confidence cuối
+  pseudo_loss_weight: 0.5       # λ: trọng số loss pseudo-labeled
+  min_pseudo_per_class: 15      # Tối thiểu mỗi class để coi là hợp lệ
+
+development:
+  enabled: false       # Bật để test nhanh
+  subset_ratio: 1.0
+  image_size: 128
+  batch_size: 16
+  epochs: 40          # warmup(15) + ssl(25) = 40 total
+  early_stopping_patience: 7
+
+research:
+  enabled: true      # Tắt development để dùng research
+  subset_ratio: 1.0
+  image_size: 224
+  batch_size: 32
+  epochs: 40
+  early_stopping_patience: 10

@@ -61,26 +61,66 @@ class BaselineCNN(nn.Module):
 
 
 # ===========================================================================
-# ImprovedCNN — ResNet-18 style, from scratch, không dùng pretrained weights
+# [B1] Squeeze-and-Excitation Block — Channel Attention
+# ===========================================================================
+
+class _SEBlock(nn.Module):
+    """Squeeze-and-Excitation: channel attention tự học xem channel nào quan trọng.
+
+    Hoạt động:
+        1. Squeeze: Global Average Pooling nén H×W → 1×1 cho mỗi channel
+        2. Excitation: 2 FC layers học ra trọng số attention cho mỗi channel
+        3. Scale: nhân feature map với trọng số attention
+
+    Đặc biệt hữu ích cho MRI brain tumor: giúp model tập trung vào
+    channels chứa đặc trưng tumor thay vì channels chứa viền sọ.
+    """
+
+    def __init__(self, channels: int, reduction: int = 16):
+        super().__init__()
+        self.squeeze = nn.AdaptiveAvgPool2d(1)
+        self.excitation = nn.Sequential(
+            nn.Linear(channels, channels // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channels // reduction, channels, bias=False),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        b, c, _, _ = x.size()
+        # Squeeze: (B, C, H, W) → (B, C, 1, 1) → (B, C)
+        scale = self.squeeze(x).view(b, c)
+        # Excitation: (B, C) → (B, C)
+        scale = self.excitation(scale)
+        # Scale: (B, C) → (B, C, 1, 1), broadcast multiply
+        return x * scale.view(b, c, 1, 1)
+
+
+# ===========================================================================
+# ImprovedCNN — ResNet-18 style + SE-Block, from scratch
 # ===========================================================================
 
 class _ResidualBlock(nn.Module):
-    """BasicBlock kiểu ResNet với residual (skip) connection.
+    """BasicBlock kiểu ResNet với residual (skip) connection + SE attention.
 
-    Cấu trúc:
-        Conv → BN → ReLU → Conv → BN
+    Cấu trúc v2:
+        Conv → BN → ReLU → Conv → BN → SE(channel attention)
         + residual (identity hoặc projection nếu stride/channel khác)
         → ReLU
     """
 
     expansion = 1
 
-    def __init__(self, in_channels: int, out_channels: int, stride: int = 1):
+    def __init__(self, in_channels: int, out_channels: int, stride: int = 1,
+                 use_se: bool = True, se_reduction: int = 16):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.conv2 = nn.Conv2d(out_channels, out_channels, 3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
+
+        # [B1] SE-Block — Channel Attention
+        self.se = _SEBlock(out_channels, se_reduction) if use_se else nn.Identity()
 
         # Projection shortcut nếu dimension thay đổi
         self.shortcut = nn.Sequential()
@@ -93,24 +133,31 @@ class _ResidualBlock(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         out = F.relu(self.bn1(self.conv1(x)), inplace=True)
         out = self.bn2(self.conv2(out))
+        out = self.se(out)             # [B1] Channel attention trước residual add
         out = out + self.shortcut(x)   # Residual connection
         out = F.relu(out, inplace=True)
         return out
 
 
 class ImprovedCNN(nn.Module):
-    """ResNet-18-style CNN xây dựng hoàn toàn từ đầu (from scratch).
+    """ResNet-18-style CNN + SE-Block + Classifier mạnh, from scratch.
+
+    Cải tiến v2 so với phiên bản cũ:
+        [B1] SE-Block trong mỗi ResidualBlock → channel attention
+        [B2] Classifier Head 3 layers + BatchNorm1d + Dropout(0.5, 0.4)
 
     Kiến trúc:
         Stem: Conv(3→64, 7×7, stride=2) → BN → ReLU → MaxPool(3×3, stride=2)
-        Layer1: 2 × ResidualBlock(64→64)
-        Layer2: 2 × ResidualBlock(64→128, stride=2)
-        Layer3: 2 × ResidualBlock(128→256, stride=2)
-        Layer4: 2 × ResidualBlock(256→512, stride=2)
+        Layer1: 2 × SE-ResidualBlock(64→64)
+        Layer2: 2 × SE-ResidualBlock(64→128, stride=2)
+        Layer3: 2 × SE-ResidualBlock(128→256, stride=2)
+        Layer4: 2 × SE-ResidualBlock(256→512, stride=2)
         AdaptiveAvgPool2d(1×1) → Flatten
-        FC(512→256) → ReLU → Dropout(0.4) → FC(256→num_classes)
+        FC(512→512) → BN → ReLU → Drop(0.5)
+        FC(512→256) → BN → ReLU → Drop(0.4)
+        FC(256→num_classes)
 
-    Tổng tham số: ~11M (tương đương ResNet-18 gốc nhưng không có pretrained weights).
+    Tổng tham số: ~11.5M (tăng nhẹ so với ~11M do SE blocks).
     Target layer cho Grad-CAM: layer4[-1] (conv cuối của stage 4).
     """
 
@@ -126,7 +173,7 @@ class ImprovedCNN(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
 
-        # 4 Stages với Residual Blocks
+        # 4 Stages với SE-Residual Blocks
         self.layer1 = self._make_layer(64, 64, n_blocks=2, stride=1)
         self.layer2 = self._make_layer(64, 128, n_blocks=2, stride=2)
         self.layer3 = self._make_layer(128, 256, n_blocks=2, stride=2)
@@ -134,9 +181,15 @@ class ImprovedCNN(nn.Module):
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
+        # [B2] Classifier Head mạnh hơn — thêm 1 layer FC + BatchNorm1d
         self.classifier = nn.Sequential(
             nn.Flatten(),
+            nn.Linear(512, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
             nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(inplace=True),
             nn.Dropout(0.4),
             nn.Linear(256, num_classes),
@@ -156,12 +209,13 @@ class ImprovedCNN(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
-                nn.init.constant_(m.bias, 0)
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.stem(x)

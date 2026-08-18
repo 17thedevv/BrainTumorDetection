@@ -117,6 +117,72 @@ python main.py --config experiments/baseline.yaml
 
 ---
 
+## SSL v2 — Huấn luyện Bán Giám sát Nâng cao (Semi-Supervised Learning)
+
+Pipeline SSL v2 tích hợp **10 giải pháp** tăng accuracy so với v1 (88.88% → dự kiến 93–95%):
+
+| Giải pháp | Mô tả |
+|---|---|
+| **[A1] Data Augmentation mạnh** | RandomCrop, VerticalFlip, Affine, GaussianBlur, **RandomErasing** (chống shortcut learning) |
+| **[A2] Mixup Training** | Trộn 2 sample theo tỷ lệ ngẫu nhiên (α=0.2) — regularization mạnh |
+| **[B1] SE-Block** | Squeeze-and-Excitation channel attention trong mỗi ResidualBlock |
+| **[B2] Classifier Head** | 3-layer FC + BatchNorm1d + Dropout(0.5, 0.4) |
+| **[B3] Label Smoothing** | `CrossEntropyLoss(label_smoothing=0.1)` — giảm overfitting |
+| **[C1] LR Warmup** | LinearLR warmup 3 epochs → CosineAnnealingWarmRestarts(T₀=10) |
+| **[C3] Gradient Clipping** | `clip_grad_norm_(max_norm=1.0)` — ổn định training |
+| **[D1] Confidence-Weighted** | Pseudo-label được weight theo confidence score |
+
+### Chạy SSL v2
+
+```powershell
+# Kích hoạt môi trường ảo
+.\venv\Scripts\activate
+
+# Chạy SSL v2 pipeline (15 warmup + 25 SSL = 40 epochs)
+python main_ssl.py --config experiments/ssl_experiment_v2.yaml
+```
+
+### Chạy SSL v2 — bỏ qua Phase A (nếu đã có checkpoint warmup)
+
+```powershell
+python main_ssl.py --config experiments/ssl_experiment_v2.yaml --skip_warmup --checkpoint saved_model/ssl_best_model.pth
+```
+
+### Đánh giá model sau khi train
+
+```powershell
+python eval_best_model.py --config experiments/ssl_experiment_v2.yaml
+```
+
+### Cấu hình SSL v2
+
+Tất cả cấu hình nằm trong `experiments/ssl_experiment_v2.yaml`:
+
+```yaml
+ssl:
+  labeled_per_class: 450        # 450 × 4 = 1800 ảnh có nhãn
+  warmup_epochs: 15             # Phase A: supervised warmup
+  ssl_epochs: 25                # Phase B: pseudo-labeling
+  pseudo_threshold_start: 0.90  # Ngưỡng confidence ban đầu
+  pseudo_threshold_end: 0.97    # Ngưỡng confidence cuối (curriculum)
+```
+
+### So sánh v1 vs v2
+
+| Tiêu chí | v1 (01/08/2026) | v2 (dự kiến) |
+|---|---|---|
+| Accuracy | 88.88% | 93–95% |
+| Augmentations | 3 ops | 11 ops |
+| Model | ResNet-18 (~11M) | ResNet-18 + SE (~11.66M) |
+| Classifier | 2-layer FC | 3-layer FC + BN |
+| Label Smoothing | ❌ | ✅ 0.1 |
+| Mixup | ❌ | ✅ α=0.2 |
+| Grad Clipping | ❌ | ✅ max_norm=1.0 |
+| LR Warmup | ❌ | ✅ 3 epochs |
+| Pseudo-label weighting | Equal | Confidence-weighted |
+
+---
+
 ## Testing Workflow
 
 ```powershell
@@ -139,7 +205,7 @@ python gui_app.py
 5. Hiển thị confidence của từng class (thanh tiến trình màu)
 6. Hiển thị thời gian inference (ms)
 7. Export kết quả ra PNG
-8. Grad-CAM overlay *(Phase 3)*
+8. Grad-CAM overlay với viền khoanh vùng tumor
 
 > GUI **không chứa business logic** — toàn bộ logic inference nằm ở `inference/predictor.py`.
 
@@ -149,31 +215,42 @@ python gui_app.py
 
 ```
 BrainTumorDetection/
-├── main.py                     # Entry point huấn luyện
+├── main.py                     # Entry point huấn luyện baseline
+├── main_ssl.py                 # Entry point SSL pipeline (v1 & v2)
+├── eval_best_model.py          # Đánh giá model + xuất biểu đồ
 ├── gui_app.py                  # Entry point GUI
 ├── experiments/
-│   └── baseline.yaml           # Điều chỉnh mode ở đây
+│   ├── baseline.yaml           # Config baseline supervised
+│   ├── ssl_experiment.yaml     # Config SSL v1
+│   └── ssl_experiment_v2.yaml  # Config SSL v2 (10 cải tiến)
 ├── configs/
 │   └── config.py               # Dataclasses cấu hình
 ├── models/
-│   └── cnn.py                  # Custom CNN (from scratch)
+│   └── cnn.py                  # BaselineCNN + ImprovedCNN (SE-Block)
 ├── datasets/
-│   ├── brain_mri_dataset.py
+│   ├── brain_mri_dataset.py    # Dataset classes (Labeled, Unlabeled, Pseudo)
 │   ├── data_module.py          # Stratified Sampling + DataLoaders
-│   └── transforms.py
+│   └── transforms.py           # Augmentation pipeline (v2: 11 ops)
 ├── training/
-│   ├── trainer.py              # AMP, tqdm, time tracking
-│   └── metrics.py
+│   ├── trainer.py              # Baseline trainer (AMP, Label Smoothing)
+│   ├── ssl_trainer.py          # SSL trainer (Mixup, GradClip, Confidence-Weighted)
+│   └── metrics.py              # Accuracy, Precision, Recall, F1
 ├── inference/
-│   ├── predictor.py            # Inference engine
-│   └── preprocessing.py       # Image loading + transform
+│   ├── predictor.py            # Inference + Grad-CAM engine
+│   └── preprocessing.py        # Image loading + transform
+├── evaluation/
+│   └── evaluate.py             # Standalone evaluation script
+├── visualization/
+│   ├── plot_metrics.py         # Training curves, confusion matrix
+│   └── results/                # Saved plots
 ├── gui/
 │   ├── main_window.py          # PyQt5 UI layout
 │   ├── controller.py           # Bridge UI <-> inference
 │   └── widgets.py              # Reusable UI components
+├── docs/                       # Run logs & reports
 ├── data/
-│   ├── dataset1/               # Training + Testing
-│   └── dataset2/               # Br35H (SSL Phase 3)
+│   ├── dataset1/               # Training + Testing (4-class)
+│   └── dataset2/               # Br35H (unlabeled, SSL)
 └── saved_model/
-    └── best_model.pth
+    └── ssl_best_model.pth      # Best model checkpoint
 ```

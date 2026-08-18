@@ -1,15 +1,26 @@
-"""main_ssl.py — Entry point cho Semi-Supervised Learning Pipeline.
+"""main_ssl.py — Entry point cho Semi-Supervised Learning Pipeline v2.
 
 Sử dụng:
-    python main_ssl.py --config experiments/ssl_experiment.yaml
+    python main_ssl.py --config experiments/ssl_experiment_v2.yaml
+
+Cải tiến v2:
+    [A1] Data Augmentation mạnh (trong transforms.py)
+    [A2] Mixup Training (trong ssl_trainer.py)
+    [B1] SE-Block channel attention (trong cnn.py)
+    [B2] Classifier Head mạnh hơn (trong cnn.py)
+    [B3] Label Smoothing 0.1 (trong ssl_trainer.py)
+    [C1] LR Warmup + CosineAnnealingWarmRestarts
+    [C2] Sử dụng pseudo_loss_weight từ config
+    [C3] Gradient Clipping (trong ssl_trainer.py)
+    [D1] Confidence-weighted pseudo-labels (trong ssl_trainer.py)
 
 Luồng:
     1. Load config → init DataModule → lấy labeled / unlabeled / val loaders
-    2. Khởi tạo ImprovedCNN + AdamW + CosineAnnealingLR
+    2. Khởi tạo ImprovedCNN + AdamW + LR Warmup + CosineWarmRestarts
     3. Phase A: Supervised Warmup (config.ssl.warmup_epochs)
     4. Phase B: Pseudo-Labeling SSL (config.ssl.ssl_epochs)
        - Generate pseudo-labels với curriculum threshold
-       - Combine labeled + pseudo → train
+       - Combine labeled + pseudo → train (mixup + label smoothing + grad clip)
     5. Evaluate trên val set → lưu kết quả
     6. Vẽ tất cả charts (training curves, confusion matrix, metrics bar)
 """
@@ -52,10 +63,10 @@ def write_run_header(f, config, mode_name, info, ssl_cfg):
     """Ghi header thông tin chạy vào file log."""
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     mode = config.active_mode
-    f.write(f"=== SSL RUN ({ts}) ===\n")
+    f.write(f"=== SSL v2 RUN ({ts}) ===\n")
     f.write(f"Experiment       : {config.experiment_name}\n")
     f.write(f"Mode             : {mode_name}\n")
-    f.write(f"Model            : {config.model.name}\n")
+    f.write(f"Model            : {config.model.name} + SE-Block + Enhanced Classifier\n")
     f.write(f"Labeled per class: {ssl_cfg.labeled_per_class} → {info['labeled']} total\n")
     f.write(f"Unlabeled total  : {info['unlabeled_total']} "
             f"(ds1={info['unlabeled_ds1']}, ds2={info['unlabeled_ds2']})\n")
@@ -66,6 +77,7 @@ def write_run_header(f, config, mode_name, info, ssl_cfg):
     f.write(f"Image size       : {mode.image_size}×{mode.image_size}\n")
     f.write(f"Batch size       : {mode.batch_size}\n")
     f.write(f"LR               : {config.training.learning_rate}\n")
+    f.write(f"Enhancements     : LabelSmoothing=0.1 | Mixup=0.2 | GradClip=1.0 | SE-Attention | LR-Warmup\n")
     f.write(f"\n{'='*100}\n")
     header = (f"{'Phase':>6} | {'Epoch':>5} | {'T-Loss':>8} | {'T-Acc':>7} | "
               f"{'T-F1':>7} | {'V-Loss':>8} | {'V-Acc':>7} | {'V-F1':>7} | "
@@ -75,7 +87,7 @@ def write_run_header(f, config, mode_name, info, ssl_cfg):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Brain Tumor SSL Pipeline")
+    parser = argparse.ArgumentParser(description="Brain Tumor SSL Pipeline v2")
     parser.add_argument('--config', type=str, default='experiments/ssl_experiment.yaml')
     parser.add_argument('--skip_warmup', action='store_true',
                         help='Skip Phase A warmup, load checkpoint and go straight to Phase B SSL')
@@ -102,6 +114,7 @@ def main():
     logger.info(f"Loaded config: {args.config}")
     logger.info(f"Mode: [{mode_name}] | image={mode.image_size} | batch={mode.batch_size}")
     logger.info(f"SSL: labeled/class={ssl_cfg.labeled_per_class} | warmup={ssl_cfg.warmup_epochs} | ssl_epochs={ssl_cfg.ssl_epochs}")
+    logger.info(f"v2 Enhancements: LabelSmoothing | Mixup | GradClip | SE-Block | LR-Warmup | Confidence-Weighted")
 
     set_seed(config.seed)
     logger.info(f"Seed: {config.seed}")
@@ -136,16 +149,29 @@ def main():
         lr=config.training.learning_rate,
         weight_decay=config.training.weight_decay,
     )
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_epochs)
 
-    trainer = SSLTrainer(model=model, device=device, logger=logger)
+    # [C1] LR Warmup + CosineAnnealingWarmRestarts
+    # Warmup: tăng LR từ 10% → 100% trong 3 epochs đầu
+    # Sau đó: Cosine restart mỗi 10 epochs, eta_min cực nhỏ
+    from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, LinearLR, SequentialLR
+    warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=3)
+    cosine_scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1, eta_min=1e-6)
+    scheduler = SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[3])
+    logger.info("Scheduler: LinearLR warmup (3 epochs) → CosineAnnealingWarmRestarts (T0=10)")
+
+    # SSLTrainer v2 — với Mixup, Label Smoothing, Gradient Clipping
+    trainer = SSLTrainer(
+        model=model, device=device, logger=logger,
+        use_mixup=True, mixup_alpha=0.2,
+        label_smoothing=0.1, max_grad_norm=1.0,
+    )
 
     # ------------------------------------------------------------------ #
     # 4. Run info file
     # ------------------------------------------------------------------ #
     os.makedirs("docs", exist_ok=True)
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_info_file = f"docs/ssl_run_{ts}.txt"
+    run_info_file = f"docs/ssl_v2_run_{ts}.txt"
     with open(run_info_file, "w", encoding="utf-8") as f:
         write_run_header(f, config, mode_name, info, ssl_cfg)
 

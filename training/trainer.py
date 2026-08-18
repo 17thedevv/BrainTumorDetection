@@ -9,12 +9,15 @@ from tqdm import tqdm
 from .metrics import calculate_metrics
 
 class Trainer:
-    def __init__(self, model: nn.Module, device: str, logger: Any):
+    def __init__(self, model: nn.Module, device: str, logger: Any,
+                 label_smoothing: float = 0.1, max_grad_norm: float = 1.0):
         self.model = model.to(device)
         self.device = device
         self.logger = logger
+        self.max_grad_norm = max_grad_norm
         
-        self.criterion = nn.CrossEntropyLoss()
+        # [B3] Label Smoothing — giảm overfitting
+        self.criterion = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
         
         # Automatic Mixed Precision (AMP) - only enabled on CUDA
         self.use_amp = device == "cuda"
@@ -22,6 +25,7 @@ class Trainer:
         
         if self.use_amp:
             self.logger.info("Automatic Mixed Precision (AMP) enabled.")
+        self.logger.info(f"Label smoothing: {label_smoothing} | Grad clip: {max_grad_norm}")
         
     def train_epoch(self, dataloader: DataLoader, optimizer: torch.optim.Optimizer) -> Dict[str, float]:
         self.model.train()
@@ -44,12 +48,17 @@ class Trainer:
                     outputs = self.model(inputs)
                     loss = self.criterion(outputs, labels)
                 self.scaler.scale(loss).backward()
+                self.scaler.unscale_(optimizer)
+                # [C3] Gradient Clipping
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
                 self.scaler.step(optimizer)
                 self.scaler.update()
             else:
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
                 loss.backward()
+                # [C3] Gradient Clipping
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
                 optimizer.step()
             
             total_loss += loss.item()
@@ -106,4 +115,3 @@ class Trainer:
         filepath = os.path.join(save_dir, filename)
         torch.save(state, filepath)
         self.logger.info(f"Checkpoint saved to {filepath}")
-
