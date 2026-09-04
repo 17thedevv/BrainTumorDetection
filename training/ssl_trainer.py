@@ -301,64 +301,69 @@ class SSLTrainer:
     # Pseudo-Labeling
     # -----------------------------------------------------------------------
 
-    @torch.no_grad()
+    @torch.no_grad() # BƯỚC 1: Tắt theo dõi đạo hàm, chỉ dự báo để tiết kiệm bộ nhớ RAM/GPU
     def generate_pseudo_labels(
         self,
         unlabeled_loader: DataLoader,
         threshold: float,
         max_per_class: int = 1500,
     ) -> Tuple['WeightedPseudoLabelDataset', Dict[str, Any]]:
-        """Forward pass tren unlabeled data, giu anh co confidence >= threshold.
+        """Thuật toán cốt lõi: Tự động gán nhãn giả cho ảnh MRI chưa có nhãn"""
+        
+        self.model.eval() # Bật chế độ Evaluation (không cập nhật trọng số)
 
-        Cải tiến v2: lưu kèm confidence score làm sample weight.
-        Co them per-class quota de tranh mat can bang pseudo-labels.
-        Moi class chi giu toi da `max_per_class` anh co confidence cao nhat.
-
-        Returns:
-            pseudo_dataset : WeightedPseudoLabelDataset (có weight)
-            stats          : dict thong ke
-        """
-        self.model.eval()
-
-        # Thu thap candidates theo tung class: {label: [(confidence, tensor), ...]}
+        # Dictionary lưu trữ danh sách ảnh được gán nhãn theo từng bệnh (Class)
         candidates: Dict[int, List[Tuple[float, torch.Tensor]]] = defaultdict(list)
         total_unlabeled = 0
 
+        # Duyệt qua từng mẻ ảnh (batch) trong tập dữ liệu không nhãn
         for images, _ in tqdm(unlabeled_loader, desc="  [Pseudo-Label Gen]",
                                leave=False, bar_format="{l_bar}{bar:25}{r_bar}"):
             images = images.to(self.device)
             total_unlabeled += images.shape[0]
 
+            # BƯỚC 2: Đưa ảnh qua mô hình để lấy kết quả thô (logits)
             if self.use_amp:
                 with autocast():
                     logits = self.model(images)
             else:
                 logits = self.model(images)
 
-            probs = F.softmax(logits, dim=1)          # (B, C)
-            max_probs, pseudo_cls = probs.max(dim=1)   # (B,)
+            # Chuyển kết quả thô thành phần trăm xác suất (từ 0 đến 1)
+            probs = F.softmax(logits, dim=1)          
+            
+            # BƯỚC 3: Lọc lấy xác suất cao nhất (max_probs) và nhãn bệnh tương ứng (pseudo_cls)
+            max_probs, pseudo_cls = probs.max(dim=1)   
 
+            # BƯỚC 4: Siết ngưỡng (Curriculum Learning) - Chỉ giữ lại ảnh có xác suất >= ngưỡng tin cậy (threshold)
             mask = max_probs >= threshold
+            
             for i, keep in enumerate(mask):
-                if keep:
-                    lbl = pseudo_cls[i].item()
-                    conf = max_probs[i].item()
+                if keep: # Nếu ảnh đạt chuẩn (>90% hoặc 97%)
+                    lbl = pseudo_cls[i].item() # Lấy tên bệnh
+                    conf = max_probs[i].item() # Lấy độ tự tin (%)
+                    # Lưu tạm ảnh này vào danh sách ứng cử viên của bệnh đó
                     candidates[lbl].append((conf, images[i].cpu()))
 
-        # Per-class quota: sort giam dan theo confidence, lay toi da max_per_class
+        # BƯỚC 5: Cân bằng dữ liệu (Chống lệch class)
         selected_tensors: List[torch.Tensor] = []
         selected_labels: List[int] = []
         selected_weights: List[float] = []
         per_class_count: Dict[int, int] = {}
 
+        # Duyệt qua từng nhóm bệnh để chọn ra các ảnh tốt nhất
         for lbl, cands in candidates.items():
+            # Sắp xếp ảnh giảm dần theo mức độ tự tin (Từ cao nhất xuống thấp nhất)
             cands.sort(key=lambda x: x[0], reverse=True)
+            # Giới hạn lấy tối đa max_per_class (ví dụ 1500 ảnh/lớp) để tránh bị mất cân bằng
             chosen = cands[:max_per_class]
             per_class_count[lbl] = len(chosen)
+            
+            # Đưa các ảnh đã được tuyển chọn kỹ càng vào mảng chính thức
             for conf, tensor in chosen:
                 selected_tensors.append(tensor)
                 selected_labels.append(lbl)
-                selected_weights.append(conf)  # [D1] confidence as weight
+                selected_weights.append(conf)  # Dùng chính % tự tin làm trọng số (Sample Weight)
 
         pseudo_dataset = WeightedPseudoLabelDataset(
             selected_tensors, selected_labels, selected_weights

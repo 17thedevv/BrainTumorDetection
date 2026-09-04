@@ -161,7 +161,7 @@ class ImprovedCNN(nn.Module):
     Target layer cho Grad-CAM: layer4[-1] (conv cuối của stage 4).
     """
 
-    def __init__(self, name: str = 'improved_cnn', num_classes: int = 4, pretrained: bool = False):
+    def __init__(self, name: str = 'improved_cnn', num_classes: int = 4, pretrained: bool = False, use_se: bool = True, legacy_classifier: bool = False):
         super().__init__()
         self.name = name.lower()
 
@@ -174,15 +174,24 @@ class ImprovedCNN(nn.Module):
         )
 
         # 4 Stages với SE-Residual Blocks
-        self.layer1 = self._make_layer(64, 64, n_blocks=2, stride=1)
-        self.layer2 = self._make_layer(64, 128, n_blocks=2, stride=2)
-        self.layer3 = self._make_layer(128, 256, n_blocks=2, stride=2)
-        self.layer4 = self._make_layer(256, 512, n_blocks=2, stride=2)
+        self.layer1 = self._make_layer(64, 64, n_blocks=2, stride=1, use_se=use_se)
+        self.layer2 = self._make_layer(64, 128, n_blocks=2, stride=2, use_se=use_se)
+        self.layer3 = self._make_layer(128, 256, n_blocks=2, stride=2, use_se=use_se)
+        self.layer4 = self._make_layer(256, 512, n_blocks=2, stride=2, use_se=use_se)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        # [B2] Classifier Head mạnh hơn — thêm 1 layer FC + BatchNorm1d
-        self.classifier = nn.Sequential(
+        if legacy_classifier:
+            self.classifier = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(512, 256),
+                nn.ReLU(inplace=True),
+                nn.Dropout(0.5),
+                nn.Linear(256, num_classes),
+            )
+        else:
+            # [B2] Classifier Head mạnh hơn — thêm 1 layer FC + BatchNorm1d
+            self.classifier = nn.Sequential(
             nn.Flatten(),
             nn.Linear(512, 512),
             nn.BatchNorm1d(512),
@@ -199,10 +208,10 @@ class ImprovedCNN(nn.Module):
         self._initialize_weights()
 
     @staticmethod
-    def _make_layer(in_channels: int, out_channels: int, n_blocks: int, stride: int) -> nn.Sequential:
-        layers = [_ResidualBlock(in_channels, out_channels, stride)]
+    def _make_layer(in_channels: int, out_channels: int, n_blocks: int, stride: int, use_se: bool = True) -> nn.Sequential:
+        layers = [_ResidualBlock(in_channels, out_channels, stride, use_se=use_se)]
         for _ in range(1, n_blocks):
-            layers.append(_ResidualBlock(out_channels, out_channels, stride=1))
+            layers.append(_ResidualBlock(out_channels, out_channels, stride=1, use_se=use_se))
         return nn.Sequential(*layers)
 
     def _initialize_weights(self):

@@ -96,8 +96,15 @@ class Predictor:
 
         # Detect architecture automatically from checkpoint state_dict keys
         is_improved = any(k.startswith('stem.') or k.startswith('layer1.') for k in state_dict.keys())
+        has_se = any('se.excitation' in k for k in state_dict.keys())
+        
         if is_improved:
-            model = ImprovedCNN(num_classes=self.num_classes, pretrained=False)
+            if has_se:
+                # Modern ImprovedCNN with SE blocks and new classifier
+                model = ImprovedCNN(num_classes=self.num_classes, pretrained=False)
+            else:
+                # Legacy ImprovedCNN (from the first run, no SE blocks, old classifier)
+                model = ImprovedCNN(num_classes=self.num_classes, pretrained=False, use_se=False, legacy_classifier=True)
         else:
             model = BaselineCNN(num_classes=self.num_classes, pretrained=False)
 

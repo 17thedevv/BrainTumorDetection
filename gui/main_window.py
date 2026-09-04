@@ -86,7 +86,23 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(DARK_STYLESHEET)
 
         self._build_ui()
-        self.statusBar().showMessage("Ready. Load a model to begin.")
+        self._auto_load_default_model()
+
+    def _auto_load_default_model(self):
+        default_path = os.path.join("saved_model", "ssl_best_model.pth")
+        if os.path.exists(default_path):
+            image_size = self.image_size_spin.value()
+            msg = self.controller.load_model(default_path, image_size=image_size)
+            if msg.startswith("Error"):
+                self.model_status_lbl.setText(msg)
+                self.model_status_lbl.setStyleSheet("color: #e74c3c; border: none;")
+            else:
+                self.model_status_lbl.setText(f"Auto-loaded: {os.path.basename(default_path)}")
+                self.model_status_lbl.setStyleSheet("color: #2ecc71; border: none;")
+            self._refresh_predict_btn()
+            self.statusBar().showMessage("Ready.")
+        else:
+            self.statusBar().showMessage("Ready. Load a model to begin.")
 
     # ------------------------------------------------------------------
     # UI construction
