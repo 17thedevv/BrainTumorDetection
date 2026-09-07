@@ -33,7 +33,7 @@ DS2_ROOT  = os.path.join(ROOT, 'data/dataset2')
 
 CLASSES      = ['glioma', 'meningioma', 'notumor', 'pituitary']
 CLASS_LABELS = ['Glioma', 'Meningioma', 'No Tumor', 'Pituitary']
-LABELED_PER_CLASS = 250
+LABELED_PER_CLASS = 450
 
 # Color palette
 BG_COLOR     = '#0F1117'

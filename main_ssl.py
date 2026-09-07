@@ -249,7 +249,7 @@ def main():
                 trainer.save_checkpoint(
                     {'epoch': epoch, 'state_dict': trainer.model.state_dict(),
                      'best_val_loss': best_val_loss, 'optimizer': optimizer.state_dict()},
-                    save_dir, "ssl_best_model.pth",
+                    save_dir, f"{config.experiment_name}_best_model.pth",
                 )
             else:
                 epochs_no_improve += 1
@@ -334,7 +334,7 @@ def main():
             trainer.save_checkpoint(
                 {'epoch': global_epoch, 'state_dict': trainer.model.state_dict(),
                  'best_val_loss': best_val_loss, 'optimizer': optimizer.state_dict()},
-                save_dir, "ssl_best_model.pth",
+                save_dir, f"{config.experiment_name}_best_model.pth",
             )
         else:
             epochs_no_improve += 1

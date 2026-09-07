@@ -18,3 +18,6 @@ scratch/
 temp.txt
 docs/lvt.md
 docs/qa_cac_thanh_vien_khac.md
+build/
+dist/
+*.spec

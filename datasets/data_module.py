@@ -97,6 +97,7 @@ class DataModule:
             sampler=sampler,
             num_workers=self.data_cfg.num_workers,
             pin_memory=True,
+            drop_last=True,
         )
 
     def get_unlabeled_dataloader(self) -> DataLoader:

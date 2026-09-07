@@ -114,6 +114,29 @@ class WeightedPseudoLabelDataset(Dataset):
 # SSL Trainer
 # ---------------------------------------------------------------------------
 
+def combined_collate_fn(batch):
+    """Collate cho mixed 2-tuple và 3-tuple samples."""
+    images = []
+    labels = []
+    weights = []
+    has_weights = False
+    for item in batch:
+        images.append(item[0])
+        labels.append(item[1])
+        if len(item) == 3:
+            weights.append(item[2])
+            has_weights = True
+        else:
+            weights.append(1.0)  # labeled data: weight = 1.0
+
+    images = torch.stack(images)
+    labels = torch.tensor(labels, dtype=torch.long)
+    if has_weights:
+        weights = torch.tensor(weights, dtype=torch.float32)
+        return images, labels, weights
+    return images, labels
+
+
 class SSLTrainer:
     """Trainer cho Semi-Supervised Learning với Pseudo-Labeling Curriculum.
 
@@ -395,35 +418,14 @@ class SSLTrainer:
         labeled_base = labeled_loader.dataset  # Subset of BrainMRIDataset
         combined = ConcatDataset([labeled_base, pseudo_dataset])
 
-        def collate_fn(batch):
-            """Collate cho mixed 2-tuple và 3-tuple samples."""
-            images = []
-            labels = []
-            weights = []
-            has_weights = False
-            for item in batch:
-                images.append(item[0])
-                labels.append(item[1])
-                if len(item) == 3:
-                    weights.append(item[2])
-                    has_weights = True
-                else:
-                    weights.append(1.0)  # labeled data: weight = 1.0
-
-            images = torch.stack(images)
-            labels = torch.tensor(labels, dtype=torch.long)
-            if has_weights:
-                weights = torch.tensor(weights, dtype=torch.float32)
-                return images, labels, weights
-            return images, labels
-
         return DataLoader(
             combined,
             batch_size=batch_size,
             shuffle=True,
             num_workers=num_workers,
             pin_memory=True,
-            collate_fn=collate_fn,
+            collate_fn=combined_collate_fn,
+            drop_last=True,
         )
 
     # -----------------------------------------------------------------------

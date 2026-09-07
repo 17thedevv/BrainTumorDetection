@@ -1,0 +1,46 @@
+experiment_name: "ssl_pretrained_exp"
+project_name: "brain_tumor_detection"
+seed: 42
+
+data:
+  dataset1_train_path: "data/dataset1/Training"
+  dataset1_test_path: "data/dataset1/Testing"
+  dataset2_path: "data/dataset2"
+  image_size: 224
+  batch_size: 32
+  num_workers: 0
+
+model:
+  name: "improved_cnn"
+  num_classes: 4
+  pretrained: true
+
+training:
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  ssl_enabled: true
+
+ssl:
+  labeled_per_class: 450
+  warmup_epochs: 10
+  ssl_epochs: 10
+  pseudo_threshold_start: 0.90
+  pseudo_threshold_end: 0.98
+  pseudo_loss_weight: 0.5
+  min_pseudo_per_class: 10
+
+development:
+  enabled: false
+  subset_ratio: 0.2
+  image_size: 128
+  batch_size: 16
+  epochs: 5
+  early_stopping_patience: 3
+
+research:
+  enabled: true
+  subset_ratio: 1.0
+  image_size: 224
+  batch_size: 32
+  epochs: 20
+  early_stopping_patience: 7

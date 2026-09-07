@@ -1,0 +1,48 @@
+=== SSL v2 RUN (20260907_020933) ===
+Experiment       : ssl_pretrained_exp
+Mode             : Research
+Model            : improved_cnn + SE-Block + Enhanced Classifier
+Labeled per class: 450 → 1800 total
+Unlabeled total  : 7661 (ds1=3800, ds2=3861)
+Val samples      : 1600
+Warmup epochs    : 10
+SSL epochs       : 10
+Threshold        : 0.9 → 0.98
+Image size       : 224×224
+Batch size       : 32
+LR               : 0.001
+Enhancements     : LabelSmoothing=0.1 | Mixup=0.2 | GradClip=1.0 | SE-Attention | LR-Warmup
+
+====================================================================================================
+ Phase | Epoch |   T-Loss |   T-Acc |    T-F1 |   V-Loss |   V-Acc |    V-F1 |  #Pseudo | Thresh |    Time | Note
+====================================================================================================
+     B |    11 |   0.5723 |  0.8903 |  0.8287 |   0.7727 |  0.7756 |  0.7702 |     1671 |  0.900 |  181.8s | <-- BEST
+     B |    12 |   0.5425 |  0.9071 |  0.8486 |   0.7700 |  0.7887 |  0.7820 |     1704 |  0.909 |  179.9s | <-- BEST
+     B |    13 |   0.5374 |  0.9051 |  0.8455 |   0.7713 |  0.7762 |  0.7738 |     1678 |  0.918 |  180.5s |
+     B |    14 |   0.6615 |  0.8395 |  0.7746 |   1.2003 |  0.6075 |  0.5368 |     1465 |  0.927 |  169.9s |
+     B |    15 |   0.7249 |  0.8002 |  0.7744 |   0.7779 |  0.7875 |  0.7816 |      913 |  0.936 |  142.0s |
+     B |    16 |   0.6583 |  0.8468 |  0.7773 |   0.8648 |  0.7469 |  0.7289 |     1177 |  0.944 |  155.5s |
+     B |    17 |   0.8346 |  0.7945 |  0.7904 |   0.8072 |  0.7512 |  0.7511 |       91 |  0.953 |  114.7s |
+     B |    18 |   0.6893 |  0.8385 |  0.8371 |   0.8912 |  0.7188 |  0.7139 |       92 |  0.962 |  110.0s |
+
+====================================================================================================
+=== KẾT QUẢ TỔNG KẾT ===
+Tổng thời gian     : 00h 50m 01s
+Epoch tốt nhất     : 12
+Best Val Loss      : 0.7700
+Best Val Accuracy  : 0.7887
+Best Val F1        : 0.7820
+Model saved        : saved_model\ssl_best_model.pth
+
+--- Final Classification Report ---
+              precision    recall  f1-score   support
+
+      Glioma       0.75      0.69      0.72       400
+  Meningioma       0.70      0.59      0.64       400
+    No Tumor       0.81      0.98      0.89       400
+   Pituitary       0.86      0.89      0.88       400
+
+    accuracy                           0.79      1600
+   macro avg       0.78      0.79      0.78      1600
+weighted avg       0.78      0.79      0.78      1600
+
